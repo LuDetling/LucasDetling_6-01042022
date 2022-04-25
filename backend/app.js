@@ -1,13 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const dotenv = require('dotenv').config();
 
 
 
 const sauceRoutes = require('./routes/sauce')
 const userRoutes = require('./routes/user')
+const auth = require('./middleware/auth');
 
-mongoose.connect('mongodb+srv://Pipas:fdaxf8mxfN@cluster0.jhjeu.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {
+mongoose.connect(process.env.DATABASE, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
@@ -25,7 +27,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use('/api/sauces', sauceRoutes);
+app.use('/api/sauces', auth, sauceRoutes);
 app.use('/api/auth', userRoutes);
 
 

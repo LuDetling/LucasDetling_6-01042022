@@ -3,6 +3,7 @@
 # backend
 
 /backend/images
+/backend/.env
 /backend/node_modules
 
 # Compiled output
