@@ -1,5 +1,8 @@
 const Sauce = require('../models/sauce');
 const fs = require('fs');
+const {
+  use
+} = require('../routes/sauce');
 
 exports.getSauces = (req, res, next) => {
   Sauce.find()
@@ -79,5 +82,57 @@ exports.deleteSauce = (req, res, next) => {
 };
 
 exports.likeSauce = (req, res, next) => {
+
+
+  const {
+    id
+  } = req.params
+  let {
+    like,
+    userId
+  } = req.body
+  // si like === 1
+  // likes +1
+  // userId est push dans le tableau like et est enlevé du tableau dislike
+  if (like === 1) {
+    Sauce.updateOne({
+        _id: id,
+      }, {
+        _id: id,
+        likes: like,
+        dislikes: 0,
+        // usersLiked: "ok",
+        // usersDisliked: Sauce.usersDisliked.filter(userDislike => userDislike !== Number(userId))
+      }).then(sauce => res.status(200).json(sauce))
+      .catch(error => res.status(400).json({
+        error
+      }))
+  } else if (like === 0) {
+    Sauce.updateOne({
+        _id: id,
+      }, {
+        _id: id,
+        likes: like,
+        dislikes: like
+        // usersLiked: Sauce.usersLiked.filter(userlike => userlike !== Number(userId)),
+        // usersDisliked: Sauce.usersDisliked.filter(userDislike => userDislike !== Number(userId))
+      }).then(sauce => res.status(200).json(sauce))
+      .catch(error => res.status(400).json({
+        error
+      }))
+  } else if (like === -1) {
+    Sauce.updateOne({
+        _id: id,
+      }, {
+        _id: id,
+        likes: 0,
+        dislikes: like
+        // usersLiked: Sauce.usersLiked.filter(userlike => userlike !== Number(userId)),
+        // usersDisliked: "ok"
+      }).then(sauce => res.status(200).json(sauce))
+      .catch(error => res.status(400).json({
+        error
+      }))
+  }
 
 }
