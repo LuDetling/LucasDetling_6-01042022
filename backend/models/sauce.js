@@ -40,16 +40,16 @@ const sauceSchema = mongoose.Schema({
     default: 0
   },
   usersLiked: {
-    type: Array,
+    type: [String],
     required: false,
     default: []
   },
   usersDisliked: {
-    type: Array,
+    type: [String],
     required: false,
     default: []
   }
 
 });
 
-module.exports = mongoose.model('Thing', sauceSchema);
+module.exports = mongoose.model('Sauce', sauceSchema);
