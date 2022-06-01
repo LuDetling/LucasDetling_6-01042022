@@ -1,29 +1,31 @@
 const Sauce = require("../models/sauce");
 const fs = require("fs");
 
-exports.getSauces = (req, res, next) => {
-  Sauce.find()
-    .then((sauces) => res.status(200).json(sauces))
-    .catch((error) =>
-      res.status(400).json({
-        error,
-      })
-    );
+exports.getSauces = async (req, res, next) => {
+  try {
+    const sauces = await Sauce.find();
+    res.status(200).json(sauces);
+  } catch (error) {
+    res.status(400).json({
+      error,
+    });
+  }
 };
 
-exports.getSauce = (req, res, next) => {
-  Sauce.findOne({
-    _id: req.params.id,
-  })
-    .then((sauce) => res.status(200).json(sauce))
-    .catch((error) =>
-      res.status(404).json({
-        error,
-      })
-    );
+exports.getSauce = async (req, res, next) => {
+  try {
+    const sauce = await Sauce.findOne({
+      _id: req.params.id,
+    });
+    res.status(200).json(sauce);
+  } catch (error) {
+    res.status(404).json({
+      error,
+    });
+  }
 };
 
-exports.createSauce = (req, res, next) => {
+exports.createSauce = async (req, res, next) => {
   const newSauce = JSON.parse(req.body.sauce);
   const sauce = new Sauce({
     ...newSauce,
@@ -31,21 +33,19 @@ exports.createSauce = (req, res, next) => {
       req.file.filename
     }`,
   });
-  sauce
-    .save()
-    .then(() =>
-      res.status(201).json({
-        message: "Objet enregistré !",
-      })
-    )
-    .catch((error) =>
-      res.status(400).json({
-        error,
-      })
-    );
+  try {
+    await sauce.save();
+    res.status(201).json({
+      message: "Objet enregistré !",
+    });
+  } catch (error) {
+    res.status(400).json({
+      error,
+    });
+  }
 };
 
-exports.modifySauce = (req, res, next) => {
+exports.modifySauce = async (req, res, next) => {
   const newSauce = req.file
     ? {
         ...JSON.parse(req.body.sauce),
@@ -56,54 +56,51 @@ exports.modifySauce = (req, res, next) => {
     : {
         ...req.body,
       };
-  Sauce.updateOne(
-    {
-      _id: req.params.id,
-    },
-    {
-      ...newSauce,
-      _id: req.params.id,
-    }
-  )
-    .then(() =>
-      res.status(200).json({
-        message: "Objet modifié !",
-      })
-    )
-    .catch((error) =>
-      res.status(400).json({
-        error,
-      })
+  try {
+    const sauce = await Sauce.updateOne(
+      {
+        _id: req.params.id,
+      },
+      {
+        ...newSauce,
+        _id: req.params.id,
+      }
     );
+    res.status(200).json({
+      message: "Objet modifié !",
+    });
+  } catch (error) {
+    res.status(400).json({
+      error,
+    });
+  }
 };
 
-exports.deleteSauce = (req, res, next) => {
-  Sauce.findOne({
-    _id: req.params.id,
-  })
-    .then((sauce) => {
-      const filename = sauce.imageUrl.split("/images/")[1];
-      fs.unlink(`images/${filename}`, () => {
-        Sauce.deleteOne({
+exports.deleteSauce = async (req, res, next) => {
+  try {
+    const sauce = await Sauce.findOne({
+      _id: req.params.id,
+    });
+    const filename = sauce.imageUrl.split("/images/")[1];
+    fs.unlink(`images/${filename}`, async () => {
+      try {
+        await Sauce.deleteOne({
           _id: req.params.id,
-        })
-          .then(() =>
-            res.status(200).json({
-              message: "Objet supprimé !",
-            })
-          )
-          .catch((error) =>
-            res.status(400).json({
-              error,
-            })
-          );
-      });
-    })
-    .catch((error) =>
-      res.status(500).json({
-        error,
-      })
-    );
+        });
+        res.status(200).json({
+          message: "Objet supprimé !",
+        });
+      } catch (error) {
+        res.status(400).json({
+          error,
+        });
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      error,
+    });
+  }
 };
 
 exports.likeSauce = async (req, res, next) => {
@@ -128,66 +125,69 @@ exports.likeSauce = async (req, res, next) => {
         }
       );
     }
-    Sauce.updateOne(
-      {
-        _id: id,
-      },
-      {
-        $inc: {
-          likes: 1,
-        },
-        $push: {
-          usersLiked: userId,
-        },
-      }
-    )
-      .then((sauce) => res.status(200).json(sauce))
-      .catch((error) =>
-        res.status(400).json({
-          error,
-        })
-      );
-  } else if (like === 0) {
-    if (sauce.usersLiked.includes(userId)) {
-      Sauce.updateOne(
+    try {
+      await Sauce.updateOne(
         {
           _id: id,
         },
         {
           $inc: {
-            likes: -1,
+            likes: 1,
           },
-          $pull: {
+          $push: {
             usersLiked: userId,
           },
         }
-      )
-        .then((sauce) => res.status(200).json(sauce))
-        .catch((error) =>
-          res.status(400).json({
-            error,
-          })
+      );
+      res.status(200).json(sauce);
+    } catch (error) {
+      res.status(400).json({
+        error,
+      });
+    }
+  } else if (like === 0) {
+    if (sauce.usersLiked.includes(userId)) {
+      try {
+        await Sauce.updateOne(
+          {
+            _id: id,
+          },
+          {
+            $inc: {
+              likes: -1,
+            },
+            $pull: {
+              usersLiked: userId,
+            },
+          }
         );
+        res.status(200).json(sauce);
+      } catch (error) {
+        res.status(400).json({
+          error,
+        });
+      }
     } else if (sauce.usersDisliked.includes(userId)) {
-      Sauce.updateOne(
-        {
-          _id: id,
-        },
-        {
-          $inc: {
-            dislikes: -1,
+      try {
+        await Sauce.updateOne(
+          {
+            _id: id,
           },
-          $pull: {
-            usersDisliked: userId,
-          },
-        }
-      )
-        .then((sauce) => res.status(200).json(sauce))
-        .catch((error) =>
-          res.status(400).json({
-            error,
-          })
+          {
+            $inc: {
+              dislikes: -1,
+            },
+            $pull: {
+              usersDisliked: userId,
+            },
+          }
         );
+        res.status(200).json(sauce);
+      } catch (error) {
+        res.status(400).json({
+          error,
+        });
+      }
     }
   } else if (like === -1) {
     if (sauce.usersLiked.includes(userId)) {
@@ -205,29 +205,29 @@ exports.likeSauce = async (req, res, next) => {
         }
       );
     }
-    Sauce.updateOne(
-      {
-        _id: id,
-      },
-      {
-        _id: id,
-        $inc: {
-          dislikes: 1,
+    try {
+      await Sauce.updateOne(
+        {
+          _id: id,
         },
-        $push: {
-          usersDisliked: userId,
-        },
-      }
-    )
-      .then((sauce) =>
-        res.status(200).json({
-          message: "Dislike",
-        })
-      )
-      .catch((error) =>
-        res.status(400).json({
-          error,
-        })
+        {
+          _id: id,
+          $inc: {
+            dislikes: 1,
+          },
+          $push: {
+            usersDisliked: userId,
+          },
+        }
       );
+
+      res.status(200).json({
+        message: "Dislike",
+      });
+    } catch (error) {
+      res.status(400).json({
+        error,
+      });
+    }
   }
 };
